@@ -1,7 +1,7 @@
 #include "window.h"
 #include "adcreader.h"
 
-#include <cmath>  // for sine stuff
+//#include <cmath>  // for sine stuff
 double max=0.0;
 
 Window::Window() : func(0),count(0)
@@ -19,12 +19,7 @@ Window::Window() : func(0),count(0)
         //thr=new QPushButton;
 	//thr->setText(tr("Threshold"));
 	//thr->show();
-        m_label = new QwtTextLabel;
-	m_label->setText("Max: ");
-	m_label->show();
-	m1_label= new QwtTextLabel;
-	m1_label->setText("0");
-	m1_label->show();
+        
 
 	// set up the initial plot data
 	for( int index=0; index<plotDataSize; ++index )
@@ -36,7 +31,7 @@ Window::Window() : func(0),count(0)
 	curve = new QwtPlotCurve;
 	plot = new QwtPlot;
 	// make a plot curve from the data and attach it to the plot
-	//curve->setSamples(xData, yData, plotDataSize);
+	curve->setSamples(xData, yData, plotDataSize);
 	curve->attach(plot);
 
 	plot->replot();
@@ -46,8 +41,7 @@ Window::Window() : func(0),count(0)
 	// set up the layout - knob above thermometer
 	vLayout = new QVBoxLayout;
 	vLayout->addWidget(knob);
-	vLayout->addWidget(m_label);
-	vLayout->addWidget(m1_label);
+
 	//vLayout->addWidget(thermo);
 
 	// plot to the left of knob and thermometer
@@ -88,9 +82,9 @@ void Window::timerEvent( QTimerEvent * )
 	double condd=1000000;	
 	double value;
 	count =0;
-	while(adcreader->read_enable()){
+	while(adcreader-hasSample()){
 				
-		inval=adcreader->get_samples();
+		inval=adcreader->getSample();
 		if (func==1){
 			inval=inval+32768-12668;
 			slope= inv/val;
