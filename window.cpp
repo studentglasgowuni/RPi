@@ -82,7 +82,7 @@ void Window::timerEvent( QTimerEvent * )
 	double condd=1000000;	
 	double value;
 	count =0;
-	while(adcreader-hasSample()){
+	while(adcreader->hasSample()){
 				
 		inval=adcreader->getSample();
 		if (func==1){
@@ -105,7 +105,7 @@ void Window::timerEvent( QTimerEvent * )
 			}
 			char m_buf[sizeof(max)];
 			sprintf(m_buf,"%f",max);
-			m1_label->setText(m_buf);
+		
 			value=fsrforce;
 		}else if (func==2){
 			max=0;
