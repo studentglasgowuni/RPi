@@ -25,7 +25,7 @@ public:
 	void timerEvent( QTimerEvent * );
 
 public slots:
-	void setFunc(double func);
+	void setGain(double func);
 
 // internal variables for the window class
 private:
