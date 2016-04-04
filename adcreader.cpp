@@ -1,15 +1,12 @@
 #include "adcreader.h"
 #include <QDebug>
-#include <stdint.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
+
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
 
-#include "gz_clk.h"
+#include "gpio-sysfs.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -22,54 +19,47 @@ static void pabort(const char *s)
 static const char *device = "/dev/spidev0.0";
 static uint8_t mode = SPI_CPHA | SPI_CPOL;
 static uint8_t bits = 8;
-static uint32_t speed = 50000;
-static uint16_t delay = 10;
 static int drdy_GPIO = 22;
+
 int inp=0;
 int outp=0;
 int buff[100];
 
 static void writeReset(int fd)
 {
-	int ret;
-	uint8_t tx1[5] = {0xff,0xff,0xff,0xff,0xff};
-	uint8_t rx1[5] = {0};
-	struct spi_ioc_transfer tr = {
-		(unsigned long)tx1,
-		(unsigned long)rx1,
-		ARRAY_SIZE(tx1),
-		speed,
-		delay,
-		bits,
-		NULL,
-		NULL,
-	};
-	ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
-	if (ret < 1)
-		pabort("can't send spi message");
+  int ret;
+  uint8_t tx1[5] = {0xff,0xff,0xff,0xff,0xff};
+  uint8_t rx1[5] = {0};
+  struct spi_ioc_transfer tr;
+
+  memset(&tr,0,sizeof(struct spi_ioc_transfer));
+  tr.tx_buf = (unsigned long)tx1;
+  tr.rx_buf = (unsigned long)rx1;
+  tr.len = sizeof(tx1);
+
+  ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
+  if (ret < 1) {
+    printf("\nerr=%d when trying to reset. \n",ret);
+    pabort("Can't send spi message");
+  }
 }
 
 static void writeReg(int fd, uint8_t v)
 {
-	int ret;
-	uint8_t tx1[1];
-	tx1[0] = v;
-	uint8_t rx1[1] = {0};
-	struct spi_ioc_transfer tr = {
-		(unsigned long)tx1,
-		(unsigned long)rx1,
-		ARRAY_SIZE(tx1),
-		speed,
-		delay,
-		bits,
-		NULL,NULL,
+  int ret;
+  uint8_t tx1[1];
+  tx1[0] = v;
+  uint8_t rx1[1] = {0};
+  struct spi_ioc_transfer tr;
 
-	};
+  memset(&tr,0,sizeof(struct spi_ioc_transfer));
+  tr.tx_buf = (unsigned long)tx1;
+  tr.rx_buf = (unsigned long)rx1;
+  tr.len = sizeof(tx1);
 
-	ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
-	if (ret < 1)
-		pabort("can't send spi message");
-
+  ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
+  if (ret < 1)
+    pabort("can't send spi message");
 }
 
 static uint8_t readReg(int fd)
@@ -78,16 +68,12 @@ static uint8_t readReg(int fd)
 	uint8_t tx1[1];
 	tx1[0] = 0;
 	uint8_t rx1[1] = {0};
-	struct spi_ioc_transfer tr = {
-		(unsigned long)tx1,
-		(unsigned long)rx1,
-		ARRAY_SIZE(tx1),
-		speed,
-		delay,
-		8,
-		NULL,NULL
-	};
+	struct spi_ioc_transfer tr;
 
+	memset(&tr,0,sizeof(struct spi_ioc_transfer));
+	tr.tx_buf = (unsigned long)tx1;
+	tr.rx_buf = (unsigned long)rx1;
+	tr.len = sizeof(tx1);
 
 	ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
 	if (ret < 1)
@@ -96,29 +82,33 @@ static uint8_t readReg(int fd)
 	return rx1[0];
 }
 
+
 static int readData(int fd)
 {
 	int ret;
 	uint8_t tx1[2] = {0,0};
 	uint8_t rx1[2] = {0,0};
-	struct spi_ioc_transfer tr = {
-		(unsigned long)tx1,
-		(unsigned long)rx1,
-		ARRAY_SIZE(tx1),
-		speed,
-		delay,
-		8,NULL,NULL,
-	};
+	struct spi_ioc_transfer tr;
+
+	memset(&tr,0,sizeof(struct spi_ioc_transfer));
+	tr.tx_buf = (unsigned long)tx1;
+	tr.rx_buf = (unsigned long)rx1;
+	tr.len = sizeof(tx1);
 
 	ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
 	if (ret < 1)
-	  pabort("can't send spi message");
+          {
+	  printf("\n can't send spi message, ret = %d\n",ret);
+          exit(1);
+          }
 	  
 	return (rx1[0]<<8)|(rx1[1]);
 }
 
 ADCreader::ADCreader(){
-
+	
+	ret = 0;
+	
 	//int no_tty = !isatty( fileno(stdout) );
 
 	fd = open(device, O_RDWR);
@@ -150,26 +140,34 @@ ADCreader::ADCreader(){
 	/*
 	 * max speed hz
 	 */
-	ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
-	if (ret == -1)
-		pabort("can't set max speed hz");
-
-	ret = ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
-	if (ret == -1)
-		pabort("can't get max speed hz");
+//	ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
+//	if (ret == -1)
+//		pabort("can't set max speed hz");
+//
+//	ret = ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
+//	if (ret == -1)
+//		pabort("can't get max speed hz");
 
 	fprintf(stderr, "spi mode: %d\n", mode);
 	fprintf(stderr, "bits per word: %d\n", bits);
-	fprintf(stderr, "max speed: %d Hz (%d KHz)\n", speed, speed/1000);
 
 	// enable master clock for the AD
 	// divisor results in roughly 4.9MHz
 	// this also inits the general purpose IO
 	gz_clock_ena(GZ_CLK_5MHz,5);
 
-	bcm2835_gpio_fsel(drdy_GPIO, BCM2835_GPIO_FSEL_INPT);
+	//bcm2835_gpio_fsel(drdy_GPIO, BCM2835_GPIO_FSEL_INPT);
+	
+	gpio_export(drdy_GPIO);
+	// set to input
+	gpio_set_dir(drdy_GPIO,0);
+	// set interrupt detection to falling edge
+	gpio_set_edge(drdy_GPIO,"falling");
+	// get a file descriptor for the GPIO pin
+	sysfs_fd = gpio_fd_open(drdy_GPIO);
 
 	// resets the AD7705 so that it expects a write to the communication register
+	printf("sending reset\n");
 	writeReset(fd);
 
 	// tell the AD7705 that the next write will be to the clock register
@@ -180,27 +178,37 @@ ADCreader::ADCreader(){
 	// tell the AD7705 that the next write will be the setup register
 	writeReg(fd,0x10);
 	// intiates a self calibration and then after that starts converting
-	writeReg(fd,0x00);
+	writeReg(fd,0x40);
 	running=0;
+	fprintf(stderr, "end of instructor\n");
 
 }
 void ADCreader::run()
 {
 	
 	// we read data in an endless loop and display it
+	
 	running = true; 
 	while (running) {
-	int d=0;
-	  do {
+//	int d=0;
+//	  do {
 	    // read /DRDY of the AD converter
-	    d = bcm2835_gpio_lev(drdy_GPIO);
+//	    d = bcm2835_gpio_lev(drdy_GPIO);
 	    // loop while /DRDY is high
-	  } while ( d );
+//	  } while ( d );
 	  
 	  // tell the AD7705 to read the data register (16 bits)
+	  // let's wait for data for max one second
+	  ret = gpio_poll(sysfs_fd,1000);
+	  if (ret<1) {
+	    fprintf(stderr,"Poll error %d\n",ret);
+	    }
+
+  
 	  writeReg(fd,0x38);
 	  // read the data register by performing two 8 bit reads
 	  int value = readData(fd)-0x8000;
+	  
 	  buff[inp]=value;
           //fprintf(stderr,"data = %d       \n",buff[inp]);
 	  inp=(inp+1)%100;	
@@ -216,7 +224,7 @@ void ADCreader::run()
 	}
 }
 
-bool ADCreader::read_enable(){
+bool ADCreader::hasSample(){
 	 if(inp==outp){
 		return false;
 	}else{
@@ -225,7 +233,7 @@ bool ADCreader::read_enable(){
 }
 
 
-int ADCreader::get_samples()
+int ADCreader::getSample()
 {
       int ret=buff[outp];
       //fprintf(stderr,"OUTPUT DATA = %d       \n",buff[outp]);	
@@ -237,5 +245,9 @@ int ADCreader::get_samples()
 void ADCreader::quit()
 {
 	running = false;
+	close(fd);
+	gpio_fd_close(sysfs_fd);
+       fprintf(stderr,"fd and sysfs_fd have cl0sed\n");	
+
 	exit(0);
 }
