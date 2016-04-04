@@ -84,8 +84,10 @@ void Window::timerEvent( QTimerEvent * )
 		yData[plotDataSize-1] = inval;
 		curve->setSamples(xData, yData, plotDataSize);
 		plot->replot();
-	
-		thermo->setValue( inval/400 + 10 );
+		if(inval<0)
+		thermo->setValue( -(inval)/1000);//mapping thermo 0 to 20, no stress=0 and max stress=20
+		else
+		thermo->setValue(inval/1000-20);
 	}
 	// set the thermometer value
 	
