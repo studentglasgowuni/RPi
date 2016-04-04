@@ -1,11 +1,11 @@
  #ifndef WINDOW_H
 #define WINDOW_H
 
-#include <qwt/qwt_thermo.h>
+//#include <qwt/qwt_thermo.h>
 #include <qwt/qwt_knob.h>
 #include <qwt/qwt_plot.h>
 #include <qwt/qwt_plot_curve.h>
-#include <qwt/qwt_text_label.h>
+//#include <qwt/qwt_text_label.h>
 
 #include <QBoxLayout>
 
@@ -30,9 +30,8 @@ public slots:
 // internal variables for the window class
 private:
 	QwtKnob      *knob;
-	QwtTextLabel *m_label;
-	QwtTextLabel *m1_label;
-	QwtThermo    *thermo;
+
+//QwtThermo    *thermo;
 	QwtPlot      *plot;
 	QwtPlotCurve *curve;
 
@@ -40,7 +39,7 @@ private:
 	QVBoxLayout  *vLayout;  // vertical layout
 	QHBoxLayout  *hLayout;  // horizontal layout
 
-	static const int plotDataSize = 1000;
+	static const int plotDataSize = 100;
 
 	// data arrays for the plot
 	double xData[plotDataSize];
