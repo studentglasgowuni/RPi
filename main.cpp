@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 	window.showMaximized();
  
 	// call the window.timerEvent function every 40 ms
-	window.startTimer(40);
+	window.startTimer(20);
 
 	// execute the application
 	return app.exec();
