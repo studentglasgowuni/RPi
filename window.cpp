@@ -85,7 +85,7 @@ void Window::timerEvent( QTimerEvent * )
 		curve->setSamples(xData, yData, plotDataSize);
 		plot->replot();
 	
-		thermo->setValue( inVal/400 + 10 );
+		thermo->setValue( inval/400 + 10 );
 	}
 	// set the thermometer value
 	
