@@ -70,58 +70,16 @@ Window::~Window() {
 
 void Window::timerEvent( QTimerEvent * )
 {
-	int inval;
-	double fsrvolt;
-	double fsrres;
-	double fsrcon;
-	double fsrforce;
-	double slope;
-	double inv=3300;
-	double val=65536;
-	double res=10000;
-	double condd=1000000;	
-	double value;
-	count =0;
+	double inval;
+
+
 	while(adcreader->hasSample()){
 				
 		inval=adcreader->getSample();
-		if (func==1){
-			inval=inval+32768-12668;
-			slope= inv/val;
-			fsrvolt=slope*inval;
-			fsrres=(inv-fsrvolt)*res;
-			fsrres/=fsrvolt;
-		
-			fsrcon=condd;
-			fsrcon/=fsrres;
-			if(fsrcon<=1000){
-				fsrforce=fsrcon/80;
-			}else{
-				fsrforce=fsrcon-1000;
-				fsrforce/=30;
-			}
-			if (max<fsrforce){
-				max=fsrforce;
-			}
-			char m_buf[sizeof(max)];
-			sprintf(m_buf,"%f",max);
-		
-			value=fsrforce;
-		}else if (func==2){
-			max=0;
-			if (inval>=10000){
-			 value=1;
-			}else{
-				max=0;
-				value=0;
-			}
-		}else {
-			value=inval;
-		}
-		
+	
 		// add the new input to the plot
 		memmove( yData, yData+1, (plotDataSize-1) * sizeof(double) );
-		yData[plotDataSize-1] = value;
+		yData[plotDataSize-1] = inval;
 		curve->setSamples(xData, yData, plotDataSize);
 		plot->replot();
 	}
