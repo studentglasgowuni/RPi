@@ -6,7 +6,7 @@ CONFIG          += qt warn_on debug
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = PressurePlot
+TARGET = QwtExample
  
 LIBS += -lqwt -lm -lbcm2835 -lrt
 
