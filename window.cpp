@@ -12,7 +12,7 @@ Window::Window() : gain(5),count(0)
 	knob->setValue(gain);
 
 	// use the Qt signals/slots framework to update the gain -
-	// every time the knob is moved, the setFunc function will be called
+	// every time the knob is moved, the setGain function will be called
 	connect( knob, SIGNAL(valueChanged(double)), SLOT(setGain(double)) );
 
 	// set up the thermometer
