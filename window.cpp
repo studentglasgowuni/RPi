@@ -2,30 +2,32 @@
 #include "adcreader.h"
 
 //#include <cmath>  // for sine stuff
-double max=0.0;
 
-Window::Window() : func(0),count(0)
+
+Window::Window() : gain(5),count(0)
 {
 	
 	knob = new QwtKnob;
 	// set up the gain knob 
-	knob->setValue(0);
+	knob->setValue(gain);
 
 	// use the Qt signals/slots framework to update the gain -
 	// every time the knob is moved, the setFunc function will be called
-	connect( knob, SIGNAL(valueChanged(double)), SLOT(setFunc(double)) );
+	connect( knob, SIGNAL(valueChanged(double)), SLOT(setGain(double)) );
 
 	// set up the thermometer
-        //thr=new QPushButton;
-	//thr->setText(tr("Threshold"));
-	//thr->show();
+        thermo=new QwtThermo;
+	thermo->setFillBrush( QBrush(Qt::red) );
+	thermo->setRange(0, 20);
+	thermo->show();
+
         
 
 	// set up the initial plot data
 	for( int index=0; index<plotDataSize; ++index )
 	{
 		xData[index] = index;
-		yData[index] = 0;
+		yData[index] = gain*1;
 	}
 
 	curve = new QwtPlotCurve;
@@ -41,8 +43,8 @@ Window::Window() : func(0),count(0)
 	// set up the layout - knob above thermometer
 	vLayout = new QVBoxLayout;
 	vLayout->addWidget(knob);
-
-	//vLayout->addWidget(thermo);
+	vLayout->addWidget(thermo);
+	
 
 	// plot to the left of knob and thermometer
 	hLayout = new QHBoxLayout;
@@ -70,28 +72,29 @@ Window::~Window() {
 
 void Window::timerEvent( QTimerEvent * )
 {
-	int inval;
-double val;
+	double inval;
 
-	while(adcreader->hasSample()){
+	while(adcreader->hasSample())
+	{
 				
 		inval=adcreader->getSample();
-	val= (double)inval;
-
+	
 		// add the new input to the plot
 		memmove( yData, yData+1, (plotDataSize-1) * sizeof(double) );
-		yData[plotDataSize-1] = val;
+		yData[plotDataSize-1] = inval;
 		curve->setSamples(xData, yData, plotDataSize);
 		plot->replot();
+	
+		thermo->setValue( inVal/400 + 10 );
 	}
 	// set the thermometer value
-	//thermo->setValue( inVal + 20 );
+	
 }
 
 
 // this function can be used to change the gain of the A/D internal amplifier
-void Window::setFunc(double func)
+void Window::setGain(double gain)
 {
 	// for example purposes just change the amplitude of the generated input
-	this->func = func;
+	this->gain = gain;
 }
