@@ -109,8 +109,7 @@ ADCreader::ADCreader(){
 	
 	ret = 0;
 	
-	//int no_tty = !isatty( fileno(stdout) );
-
+	
 	fd = open(device, O_RDWR);
 	if (fd < 0)
 		pabort("can't open device");
@@ -137,16 +136,7 @@ ADCreader::ADCreader(){
 	if (ret == -1)
 		pabort("can't get bits per word");
 
-	/*
-	 * max speed hz
-	 */
-//	ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
-//	if (ret == -1)
-//		pabort("can't set max speed hz");
-//
-//	ret = ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
-//	if (ret == -1)
-//		pabort("can't get max speed hz");
+	
 
 	fprintf(stderr, "spi mode: %d\n", mode);
 	fprintf(stderr, "bits per word: %d\n", bits);
@@ -155,9 +145,6 @@ ADCreader::ADCreader(){
 	// divisor results in roughly 4.9MHz
 	// this also inits the general purpose IO
 	gz_clock_ena(GZ_CLK_5MHz,5);
-
-	//bcm2835_gpio_fsel(drdy_GPIO, BCM2835_GPIO_FSEL_INPT);
-	
 	gpio_export(drdy_GPIO);
 	// set to input
 	gpio_set_dir(drdy_GPIO,0);
@@ -189,14 +176,8 @@ void ADCreader::run()
 	// we read data in an endless loop and display it
 	
 	running = true; 
-	while (running) {
-//	int d=0;
-//	  do {
-	    // read /DRDY of the AD converter
-//	    d = bcm2835_gpio_lev(drdy_GPIO);
-	    // loop while /DRDY is high
-//	  } while ( d );
-	  
+	while (running)
+	{
 	  // tell the AD7705 to read the data register (16 bits)
 	  // let's wait for data for max one second
 	  ret = gpio_poll(sysfs_fd,1000);
@@ -210,18 +191,9 @@ void ADCreader::run()
 	  int value = readData(fd)-0x8000;
 	  
 	  buff[inp]=value;
-          //fprintf(stderr,"data = %d       \n",buff[inp]);
-	  inp=(inp+1)%100;	
-	  
-
-		// if stdout is redirected to a file or pipe, output the data
-		/*if( no_tty )
-		{
-			printf("%d\n", value);
-			fflush(stdout);
-		}*/
-	  //sleep(0.25);
-	}
+            inp=(inp+1)%100;	
+	 
+			}
 }
 
 bool ADCreader::hasSample(){
@@ -236,8 +208,7 @@ bool ADCreader::hasSample(){
 int ADCreader::getSample()
 {
       int ret=buff[outp];
-      //fprintf(stderr,"OUTPUT DATA = %d       \n",buff[outp]);	
-      outp=(outp+1)%100;	
+          outp=(outp+1)%100;	
       return ret;
 }
 
