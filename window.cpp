@@ -1,6 +1,6 @@
 #include "window.h"
 #include "adcreader.h"
-
+#include <stdlib.h>//for audio
 //#include <cmath>  // for sine stuff
 
 
@@ -85,7 +85,11 @@ void Window::timerEvent( QTimerEvent * )
 		curve->setSamples(xData, yData, plotDataSize);
 		plot->replot();
 		if(inval>=(-22000) && inval<=(-15000))
-		thermo->setValue( -(inval)/1000);//mapping thermo 0 to 20, no stress=0 and max stress=20
+		{
+			thermo->setValue( -(inval)/1000);//mapping thermo 0 to 20, no stress=0 and max stress=20
+			system("omxplayer /home/pi/bleep_01.wav")
+			
+		}
 		else if(inval>(-15000) && inval<=(10000))
 		thermo->setValue(10);
 		else 
