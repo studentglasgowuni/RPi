@@ -87,7 +87,7 @@ void Window::timerEvent( QTimerEvent * )
 		if(inval>=(-22000) && inval<=(-15000))
 		{
 			thermo->setValue( -(inval)/1000);//mapping thermo 0 to 20, no stress=0 and max stress=20
-			system("omxplayer /home/pi/bleep_01.wav")
+			system("omxplayer /home/pi/bleep_01.wav");
 			
 		}
 		else if(inval>(-15000) && inval<=(10000))
